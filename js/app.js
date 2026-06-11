@@ -333,8 +333,8 @@ window.FWRD = window.FWRD || {};
       "<h1>About FWRD</h1>" +
       '<div class="stack">' +
       '<div class="card"><h3>Why this exists</h3>' +
-      "<p>Analysis of patient safety incidents — in healthcare and across aviation, nuclear and other high-reliability industries — keeps reaching the same conclusion: most error is human-factors error, not knowledge error. Yet medical training spends almost all of its time on knowledge, and almost none on the non-technical skills that determine whether knowledge gets deployed when it matters.</p>" +
-      "<p>FWRD, from <a href='https://forwardmedicine.co.uk' target='_blank' rel='noopener'>Forward Medicine</a>, exists to liberalise access to that training: the mental models and frameworks of Crisis Resource Management (CRM), practised through scenarios, available to any clinician with a browser — not just those lucky enough to get regular simulation slots.</p></div>" +
+      "<p>Analysis of patient safety incidents in healthcare and across aviation, nuclear and other high-reliability industries keeps reaching the same conclusion: most error is human-factors error, not knowledge error. Yet medical training spends almost all of its time on knowledge, and almost none on the non-technical skills that determine whether knowledge gets deployed when it matters.</p>" +
+      "<p>FWRD, from <a href='https://forwardmedicine.co.uk' target='_blank' rel='noopener'>Forward Medicine</a>, exists to liberalise access to that training: the mental models and frameworks of Crisis Resource Management (CRM), practised through scenarios, available to any clinician with a browser, not just those lucky enough to get regular simulation slots.</p></div>" +
 
       '<div class="card"><h3>The five domains</h3>' +
       "<p><strong>Situational awareness</strong> — perceiving the cues, understanding what they mean, projecting what happens next (Endsley's model).</p>" +
