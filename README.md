@@ -116,6 +116,17 @@ Append an object to the array in `js/data/toolkit-data.js` or `js/data/rehearsal
 the format is documented at the top of each file. Toolkit `id`s are what scenarios reference
 in `principles`.
 
+## The feedback survey
+
+The Feedback page embeds a Google Form (validation + impact survey; the question set lives
+in the Forward Medicine "Validation survey" folder). Configuration is one file:
+`js/data/feedback-config.js` — paste the Google Form link into `formUrl`. While `formUrl`
+is empty, the page shows a "coming soon" note with a contact email instead.
+
+After each completed scenario, a polite popup invites users to the survey. It stops asking
+once they visit the Feedback page, snoozes for two scenarios on "Maybe later", and respects
+"Don't ask again" permanently (all tracked in the user's own browser).
+
 ---
 
 ## Roadmap ideas (from the design document)

@@ -497,6 +497,42 @@ hr.soft { border: none; border-top: 1px solid var(--line); margin: 1rem 0; }
 .rate-btn:hover { border-color: var(--brand); background: var(--brand-soft); }
 
 /* ============================================================
+   Feedback survey
+   ============================================================ */
+.feedback-frame {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: #fff;
+  display: block;
+}
+
+/* Modal (post-scenario feedback prompt) */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 42, 62, .55);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 50;
+  animation: fadeIn .25s ease;
+}
+.modal-card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 48px rgba(16, 42, 62, .35);
+  padding: 1.3rem 1.4rem;
+  max-width: 460px;
+  width: 100%;
+}
+.modal-card h3 { margin-bottom: .4rem; }
+.modal-card p { font-size: .92rem; color: var(--muted); }
+.small-btn { font-size: .8rem; padding: .5rem .8rem; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ============================================================
    Responsive
    ============================================================ */
 @media (max-width: 880px) {

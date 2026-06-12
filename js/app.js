@@ -356,9 +356,43 @@ window.FWRD = window.FWRD || {};
   }
 
   /* ============================================================
+     FEEDBACK
+     ============================================================ */
+  function renderFeedback() {
+    const el = document.getElementById("view-feedback");
+    const cfg = FWRD.feedbackConfig || {};
+    const hasForm = !!(cfg.formUrl && cfg.formUrl.trim());
+
+    let surveyHtml;
+    if (hasForm) {
+      const embedSrc = cfg.formUrl + (cfg.formUrl.indexOf("?") === -1 ? "?embedded=true" : "&embedded=true");
+      surveyHtml =
+        '<div class="card" style="padding:.5rem">' +
+        '<iframe class="feedback-frame" src="' + esc(embedSrc) + '" height="' + (cfg.formHeight || 2400) + '" ' +
+        'title="FWRD feedback survey" loading="lazy">Loading…</iframe></div>' +
+        '<p class="small muted">Form not loading? <a href="' + esc(cfg.formUrl) + '" target="_blank" rel="noopener">Open the survey in its own tab</a>.</p>';
+    } else {
+      surveyHtml =
+        '<div class="card"><h3>The survey opens shortly</h3>' +
+        "<p>We're finalising the questionnaire. In the meantime, we'd still love to hear from you — " +
+        'email <a href="mailto:' + esc(cfg.email || "fwrdmed@gmail.com") + '?subject=FWRD%20CRM%20Trainer%20feedback">' + esc(cfg.email || "fwrdmed@gmail.com") + "</a> " +
+        "with anything: what worked, what didn't, what you'd want next.</p></div>";
+    }
+
+    el.innerHTML =
+      "<h1>Feedback</h1>" +
+      '<p class="muted">FWRD is free, built by clinicians, and shaped entirely by what you tell us. ' +
+      "This anonymous survey takes about " + (cfg.minutes || 3) + " minutes: it measures whether training like this " +
+      "is genuinely needed, and whether it is changing how you think and practise — which decides what we build next.</p>" +
+      '<div class="stack">' + surveyHtml +
+      '<p class="small muted">No patient data, no login, no tracking — responses go only to the Forward Medicine team' +
+      (hasForm ? "" : " at " + esc(cfg.email || "fwrdmed@gmail.com")) + ".</p></div>";
+  }
+
+  /* ============================================================
      ROUTER
      ============================================================ */
-  const views = ["home", "scenarios", "player", "toolkit", "rehearsal", "about"];
+  const views = ["home", "scenarios", "player", "toolkit", "rehearsal", "about", "feedback"];
 
   function show(view) {
     views.forEach(function (v) {
@@ -386,6 +420,11 @@ window.FWRD = window.FWRD || {};
       show("rehearsal"); renderRehearsalList();
     } else if (parts[0] === "about") {
       show("about"); renderAbout();
+    } else if (parts[0] === "feedback") {
+      show("feedback"); renderFeedback();
+      // Once they've seen the live survey, stop the post-scenario prompts.
+      // (A visit to the placeholder page, before the form exists, doesn't count.)
+      if (FWRD.feedbackConfig && FWRD.feedbackConfig.formUrl) FWRD.state.feedbackOpened();
     } else {
       show("home"); renderHome();
     }

@@ -29,7 +29,11 @@ FWRD.state = (function () {
     return {
       results: [],     // completed scenario runs
       rehearsals: [],  // completed rehearsal sessions
-      settings: { timed: true, unlockAll: false }
+      settings: { timed: true, unlockAll: false },
+      // Post-scenario survey prompt: status 'none' (keep asking politely),
+      // 'opened' (they visited the survey — stop), 'never' (they opted out).
+      // snoozeUntil = completed-scenario count at which we may ask again.
+      feedback: { status: "none", snoozeUntil: 0 }
     };
   }
 
@@ -41,7 +45,8 @@ FWRD.state = (function () {
       if (!raw) return defaults();
       const parsed = JSON.parse(raw);
       return Object.assign(defaults(), parsed, {
-        settings: Object.assign(defaults().settings, parsed.settings || {})
+        settings: Object.assign(defaults().settings, parsed.settings || {}),
+        feedback: Object.assign(defaults().feedback, parsed.feedback || {})
       });
     } catch (e) {
       return memoryFallback || defaults();
@@ -131,6 +136,23 @@ FWRD.state = (function () {
       if (data.results.some(function (r) { return r.overall >= 60; })) level = 2;
       if (data.results.filter(function (r) { return r.overall >= 65; }).length >= 2) level = 3;
       return level;
+    },
+
+    /* ---- feedback survey prompting ---- */
+    shouldPromptFeedback: function () {
+      return data.feedback.status === "none" &&
+             data.results.length >= 1 &&
+             data.results.length >= data.feedback.snoozeUntil;
+    },
+    feedbackOpened: function () {
+      if (data.feedback.status === "none") { data.feedback.status = "opened"; persist(); }
+    },
+    feedbackNever: function () {
+      data.feedback.status = "never"; persist();
+    },
+    feedbackSnooze: function () {
+      // ask again two completed scenarios from now
+      data.feedback.snoozeUntil = data.results.length + 2; persist();
     },
 
     unlockHint: function (level) {

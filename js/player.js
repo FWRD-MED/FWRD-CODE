@@ -6,8 +6,9 @@
 window.FWRD = window.FWRD || {};
 
 FWRD.player = (function () {
-  let run = null;       // current run state
-  let timerId = null;   // countdown interval
+  let run = null;        // current run state
+  let timerId = null;    // countdown interval
+  let promptTimer = null; // delayed feedback-prompt timeout
 
   function view() { return document.getElementById("view-player"); }
 
@@ -46,7 +47,12 @@ FWRD.player = (function () {
     renderBriefing();
   }
 
-  function cleanup() { stopTimer(); }
+  function cleanup() {
+    stopTimer();
+    if (promptTimer) { clearTimeout(promptTimer); promptTimer = null; }
+    const modal = document.getElementById("feedback-modal");
+    if (modal) modal.remove();
+  }
 
   function exit() {
     if (run && run.decisions.length > 0) {
@@ -343,6 +349,7 @@ FWRD.player = (function () {
       '<button class="btn secondary" id="btn-again">Run again</button>' +
       '<a class="btn secondary" href="#scenarios">Scenario Lab</a>' +
       '<a class="btn secondary" href="#home">Dashboard</a>' +
+      '<a class="btn secondary" href="#feedback">Give feedback</a>' +
       "</div></div></div>";
 
     const sc = run.sc;
@@ -354,6 +361,39 @@ FWRD.player = (function () {
     run = { sc: sc, decisions: [], earned: {}, max: {}, vitals: null, started: Date.now(), pendingTimeout: false }; // keep header working post-run
     FWRD.DOMAINS.forEach(function (d) { run.earned[d.key] = 0; run.max[d.key] = 0; });
     window.scrollTo(0, 0);
+
+    if (FWRD.state.shouldPromptFeedback()) {
+      promptTimer = setTimeout(showFeedbackPrompt, 1500);
+    }
+  }
+
+  /* A kind, dismissible ask for survey feedback after a completed scenario. */
+  function showFeedbackPrompt() {
+    promptTimer = null;
+    if (document.getElementById("feedback-modal")) return;
+    const minutes = (FWRD.feedbackConfig && FWRD.feedbackConfig.minutes) || 3;
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    backdrop.id = "feedback-modal";
+    backdrop.innerHTML =
+      '<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fb-title">' +
+      '<h3 id="fb-title">Before you go — has FWRD helped?</h3>' +
+      "<p>You've just debriefed a scenario, which makes you exactly the person we need to hear from. " +
+      "Our anonymous " + minutes + "-minute survey measures whether this training is working and decides what we build next.</p>" +
+      '<div class="row" style="justify-content:flex-end">' +
+      '<button class="btn secondary small-btn" id="fb-never">Don\'t ask again</button>' +
+      '<button class="btn secondary small-btn" id="fb-later">Maybe later</button>' +
+      '<button class="btn" id="fb-go">Share feedback (' + minutes + ' min)</button>' +
+      "</div></div>";
+    document.body.appendChild(backdrop);
+
+    function close() { backdrop.remove(); }
+    document.getElementById("fb-go").onclick = function () { close(); location.hash = "#feedback"; };
+    document.getElementById("fb-later").onclick = function () { FWRD.state.feedbackSnooze(); close(); };
+    document.getElementById("fb-never").onclick = function () { FWRD.state.feedbackNever(); close(); };
+    backdrop.addEventListener("click", function (e) {
+      if (e.target === backdrop) { FWRD.state.feedbackSnooze(); close(); } // clicking outside = maybe later
+    });
   }
 
   return { start: start, cleanup: cleanup };
