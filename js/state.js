@@ -33,7 +33,9 @@ FWRD.state = (function () {
       // Post-scenario survey prompt: status 'none' (keep asking politely),
       // 'opened' (they visited the survey — stop), 'never' (they opted out).
       // snoozeUntil = completed-scenario count at which we may ask again.
-      feedback: { status: "none", snoozeUntil: 0 }
+      feedback: { status: "none", snoozeUntil: 0 },
+      // Beginner's Guide progress: lessonId -> { block: <next unread block>, done: bool }
+      guide: {}
     };
   }
 
@@ -46,7 +48,8 @@ FWRD.state = (function () {
       const parsed = JSON.parse(raw);
       return Object.assign(defaults(), parsed, {
         settings: Object.assign(defaults().settings, parsed.settings || {}),
-        feedback: Object.assign(defaults().feedback, parsed.feedback || {})
+        feedback: Object.assign(defaults().feedback, parsed.feedback || {}),
+        guide: parsed.guide || {}
       });
     } catch (e) {
       return memoryFallback || defaults();
@@ -136,6 +139,24 @@ FWRD.state = (function () {
       if (data.results.some(function (r) { return r.overall >= 60; })) level = 2;
       if (data.results.filter(function (r) { return r.overall >= 65; }).length >= 2) level = 3;
       return level;
+    },
+
+    /* ---- Beginner's Guide progress ---- */
+    guideProgress: function (lessonId) {
+      return data.guide[lessonId] || { block: 0, done: false };
+    },
+    guideSetBlock: function (lessonId, blockIndex) {
+      const g = data.guide[lessonId] || { block: 0, done: false };
+      if (blockIndex > g.block) { g.block = blockIndex; data.guide[lessonId] = g; persist(); }
+    },
+    guideComplete: function (lessonId) {
+      if (!data.guide[lessonId] || !data.guide[lessonId].done) {
+        data.guide[lessonId] = { block: 9999, done: true, completedAt: new Date().toISOString() };
+        persist();
+      }
+    },
+    guideDoneCount: function () {
+      return Object.keys(data.guide).filter(function (k) { return data.guide[k].done; }).length;
     },
 
     /* ---- feedback survey prompting ---- */

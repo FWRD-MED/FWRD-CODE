@@ -38,13 +38,32 @@ window.FWRD = window.FWRD || {};
     const hour = new Date().getHours();
     const greeting = hour < 5 ? "Night shift?" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
-    // Suggest the next session: weakest domain → a scenario that trains it.
+    // Guide progress (for the hero bar and the "up next" suggestion)
+    const gTotal = FWRD.guide ? FWRD.guide.total() : 0;
+    const gDone = FWRD.guide ? FWRD.guide.doneCount() : 0;
+    const gNext = FWRD.guide ? FWRD.guide.nextLesson() : null;
+    const gPct = gTotal ? Math.round((gDone / gTotal) * 100) : 0;
+
+    // Suggest the next session: the guide first (it's the front door),
+    // then the weakest domain → a scenario that trains it.
     let suggestion;
     const unlocked = s.maxUnlockedLevel();
     const all = FWRD.scenarios.slice().sort(function (a, b) { return a.level - b.level; });
-    if (!results.length) {
+    if (gNext) {
+      suggestion = {
+        title: "Lesson " + gNext.num + " — " + gNext.title,
+        href: "#guide/" + gNext.id,
+        btn: gDone === 0 ? "Start the guide" : "Continue the guide",
+        why: gDone === 0
+          ? "New here? The Beginner's Guide is the front door: six short lessons that change how you'll read every scenario."
+          : "Pick the guide back up — " + gDone + " of " + gTotal + " lessons done, ~" + gNext.minutes + " min for the next one."
+      };
+    } else if (!results.length) {
       const first = all[0];
-      suggestion = { sc: first, why: "Start here — your first scenario calibrates your skill profile." };
+      suggestion = {
+        title: first.title, href: "#play/" + first.id, btn: "Start scenario",
+        why: "Guide complete — now the practice. Your first scenario calibrates your skill profile."
+      };
     } else {
       const scoredDomains = FWRD.DOMAINS.filter(function (d) { return avgs[d.key] != null; })
         .sort(function (a, b) { return avgs[a.key] - avgs[b.key]; });
@@ -56,7 +75,7 @@ window.FWRD = window.FWRD || {};
       }
       if (!pick) pick = all.find(function (sc) { return sc.level <= unlocked && s.bestFor(sc.id) === null; }) || all[0];
       suggestion = {
-        sc: pick,
+        title: pick.title, href: "#play/" + pick.id, btn: "Start scenario",
         why: weakest ? "Your current focus area is " + weakest.name.toLowerCase() + " (" + avgs[weakest.key] + "%) — this scenario trains it." :
                        "Keep building your profile."
       };
@@ -92,11 +111,17 @@ window.FWRD = window.FWRD || {};
       '<div class="stat"><b>' + results.length + "</b><span>scenarios completed</span></div>" +
       '<div class="stat"><b>' + streak + (streak === 1 ? " day" : " days") + "</b><span>training streak</span></div>" +
       '<div class="stat"><b>' + (overall == null ? "—" : overall + "%") + "</b><span>recent overall CRM score</span></div>" +
-      "</div></div>" +
+      "</div>" +
+      '<a class="hero-progress" href="#guide" title="Open the Beginner\'s Guide">' +
+      '<span class="hp-label">Beginner\'s Guide to CRM</span>' +
+      '<span class="bar"><span style="width:' + gPct + '%"></span></span>' +
+      '<span class="hp-val">' + gDone + "/" + gTotal + " lessons" + (gTotal && gDone === gTotal ? " ✓" : "") + "</span>" +
+      "</a>" +
+      "</div>" +
 
-      '<div class="card spread"><div><h3 style="margin-bottom:.2rem">Up next: ' + esc(suggestion.sc.title) + "</h3>" +
+      '<div class="card spread"><div><h3 style="margin-bottom:.2rem">Up next: ' + esc(suggestion.title) + "</h3>" +
       '<p class="small muted" style="margin:0">' + esc(suggestion.why) + "</p></div>" +
-      '<a class="btn" href="#play/' + esc(suggestion.sc.id) + '">Start scenario</a></div>' +
+      '<a class="btn" href="' + esc(suggestion.href) + '">' + esc(suggestion.btn) + "</a></div>" +
 
       '<div class="grid-2">' +
       '<div class="card"><h3>Your CRM profile</h3><div class="radar-wrap"><canvas id="radar"></canvas></div>' +
@@ -105,7 +130,8 @@ window.FWRD = window.FWRD || {};
       '<hr class="soft"><h3>Recent sessions</h3>' + sessionHtml + "</div>" +
       "</div>" +
 
-      '<div class="grid-3">' +
+      '<div class="grid-4">' +
+      '<div class="card"><h3>CRM Guide</h3><p class="small muted">The Beginner\'s Guide — six short lessons, real cases, the pre-reading for everything else.</p><a class="btn subtle" href="#guide">Open</a></div>' +
       '<div class="card"><h3>Scenario Lab</h3><p class="small muted">Branching clinical crises scored across the five domains.</p><a class="btn subtle" href="#scenarios">Open</a></div>' +
       '<div class="card"><h3>CRM Toolkit</h3><p class="small muted">The frameworks — SBAR, PACE, OODA, 10-for-10 — in 60-second cards.</p><a class="btn subtle" href="#toolkit">Open</a></div>' +
       '<div class="card"><h3>Mental Rehearsal</h3><p class="small muted">Guided visualisation: pre-load the crisis before it finds you.</p><a class="btn subtle" href="#rehearsal">Open</a></div>' +
@@ -392,7 +418,7 @@ window.FWRD = window.FWRD || {};
   /* ============================================================
      ROUTER
      ============================================================ */
-  const views = ["home", "scenarios", "player", "toolkit", "rehearsal", "about", "feedback"];
+  const views = ["home", "guide", "scenarios", "player", "toolkit", "rehearsal", "about", "feedback"];
 
   function show(view) {
     views.forEach(function (v) {
@@ -412,6 +438,9 @@ window.FWRD = window.FWRD || {};
     if (parts[0] === "play" && parts[1]) {
       show("player");
       FWRD.player.start(parts[1]);
+    } else if (parts[0] === "guide") {
+      show("guide");
+      if (parts[1]) FWRD.guide.renderLesson(parts[1]); else FWRD.guide.renderList();
     } else if (parts[0] === "scenarios") {
       show("scenarios"); renderScenarios();
     } else if (parts[0] === "toolkit") {

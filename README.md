@@ -46,23 +46,38 @@ index.html                  The app shell (navigation + empty views)
 css/styles.css              All styling (colours/design tokens at the top)
 js/
   app.js                    Navigation + the Home, Scenario Lab, Toolkit,
-                            Rehearsal and About screens
+                            Rehearsal, About and Feedback screens
+  guide.js                  The Beginner's Guide engine (progressive-reveal lessons)
   player.js                 The scenario engine: decisions, timers, scoring, debrief
   state.js                  Progress storage (browser localStorage), streaks, unlocks
   charts.js                 The radar chart on the dashboard
   data/
+    guide-1-foundations.js  ← Beginner's Guide lessons live here…
+    guide-…                 (six lessons; block format documented in js/guide.js)
     scenario-1-sepsis.js    ← scenario content lives here…
     scenario-2-hypoxia.js
     scenario-3-arrest.js
     scenario-4-drowsy.js
     toolkit-data.js         The CRM frameworks library
     rehearsal-data.js       The mental rehearsal scripts
+    feedback-config.js      The feedback survey link
 ```
 
 **The golden rule: content lives in `js/data/`, behaviour lives in `js/`.**
 You can add scenarios, tools and rehearsal scripts without touching the engine.
 
 ---
+
+## Editing the Beginner's Guide
+
+The guide ("CRM Guide" in the navigation) is six progressive-reveal lessons. Each lesson
+is one file in `js/data/` (`guide-1-foundations.js` …) containing a list of **blocks** —
+`text`, `case` (real-case callout), `quiz` (with a `correct` option, or none for a
+prediction/poll), `keypoints`, `try` (on-shift exercise), `tools` (Toolkit links) and
+`action` (call-to-action button). The full block format is documented at the top of
+`js/guide.js`. To add a lesson: copy a lesson file, give it a new `id` and the next `num`,
+and add its `<script>` tag to `index.html`. Completion is tracked per lesson in the
+user's browser and shown on the Home dashboard's progress bar.
 
 ## Writing a new scenario
 
